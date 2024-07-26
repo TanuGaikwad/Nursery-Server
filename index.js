@@ -11,9 +11,10 @@ const plants = [
         "id": 2,
         "name": "Bamboo",
         "category": "indoor",
-        "image": "https://m.media-amazon.com/images/I/41bDyuyrJdL._SX300_SY300_QL70_FMwebp_.jpg",
-        "price": 150,
+        "image": "https://i.ebayimg.com/images/g/6L8AAOSwV9Vk1Kt5/s-l1600.webp",
+        "price": "150",
         "description": "3 Layer Lucky Bamboo In A Glass Vase"
+    
     },
 
     {
@@ -111,7 +112,7 @@ app.get("/plants", (req, res)=>{
   res.json({
    success: true,
    data: plants,
-   message:"All plants fetched successfully "
+   message:"All plants fetched successfully"
 
   })  
 })
@@ -131,7 +132,16 @@ app.get("/plant/:id", (req, res)=>{
 
 
 app.put("/plant/:id", (req, res)=>{
-    const {id} = req.params
+ 
+    const {
+        name,
+        category,
+        image,
+        price,
+        description,
+    } = req.body
+
+   const {id} = req.params
 
    let index = -1
 
@@ -141,16 +151,17 @@ app.put("/plant/:id", (req, res)=>{
     }
    })
 
+
    const newObj = {
-    id,
-    name,
-    category,
-    image,
-    price,
-    description
+   id,
+   name,
+   category,
+   image,
+   price,
+   description
    }
 
-   if(index == -1){
+   if(index==-1){
 
     return  res.json({
     success: false,
@@ -173,13 +184,15 @@ app.put("/plant/:id", (req, res)=>{
 
 app.delete("/plant/:id", (req, res)=>{
     console.log("Point 1")
+
     const {id} = req.params
+
     let index = -1
 
     plants.forEach((plant, i)=>{
       if(plant.id==id) {
 
-        index = i
+      index = i
       }
     })
 
@@ -198,6 +211,13 @@ app.delete("/plant/:id", (req, res)=>{
         message: "Plant deleted successfully",
         data: null
     })
+})
+
+app.use("*", (req, res)=>{
+
+   res.send(`<div>
+   <h1 style="text-align: center;"> 404 Not Found</h1>
+    </div>`)
 })
 
 const PORT = process.env.PORT
