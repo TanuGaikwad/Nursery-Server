@@ -1,226 +1,51 @@
 import express from "express";
 import dotenv from "dotenv"
 dotenv.config()
+import mongoose from "mongoose";
+
+import { getHealth } from "./controllers/health.js"
+import {
+      postPlant,
+      getPlants,
+      getPlantId,
+      putPlantId ,
+      deletePlantId 
+    } from "./controllers/plant.js";
+
+    import { handlePageNotFound } from "./controllers/errors.js"
 
 const app = express()
 app.use(express.json())
 
-//This is temporary db
-const plants = [
-    {
-        "id": 2,
-        "name": "Bamboo",
-        "category": "indoor",
-        "image": "https://i.ebayimg.com/images/g/6L8AAOSwV9Vk1Kt5/s-l1600.webp",
-        "price": "150",
-        "description": "3 Layer Lucky Bamboo In A Glass Vase"
-    
-    },
-
-    {
-        "id": 4,
-        "name": "Rose",
-        "category": "outdoor",
-        "image": "https://m.media-amazon.com/images/I/41bDyuyrJdL._SX300_SY300_QL70_FMwebp_.jpg",
-        "price": 200,
-        "description": "Rose Plant"
-    },
-
-    {
-        "id": 8,
-        "name": "Mango",
-        "category": "indoor",
-        "image": "https://m.media-amazon.com/images/I/41bDyuyrJdL._SX300_SY300_QL70_FMwebp_.jpg",
-        "price": 250,
-        "description": "Mango Plant"
-    }
-]
-
-
-app.post("/plant", (req, res)=>{
-    const {
-        name, 
-        category,
-        image,
-        price,
-        description
-    } = req.body
-
-    if(!name){
-   return res.json({
-        success:false,
-        data:null,
-        message:"Name is required..."
-    })    
+const dbConnection = async ()=>{
+const conn = await mongoose.connect(process.env.MONGO_URL)
+    if(conn){
+        console.log(`MongoDB connected`)
     }
 
-    if(!category){
-        return res.json({
-             success:false,
-             data:null,
-             message:"  category is required..."
-         })    
-         }
-
-         if(!image){
-            return res.json({
-                 success:false,
-                 data:null,
-                 message:"image is required..."
-             })    
-             }
-
-             if(!price){
-                return res.json({
-                     success:false,
-                     data:null,
-                     message:"price is required..."
-                 })    
-                 }
-
-                 
-             if(!description){
-                return res.json({
-                     success:false,
-                     data:null,
-                     message:"description is required..."
-                 })    
-                 }
-
-    const randomId = Math.round(Math.random() * 10000)
-
-    const newPlant = {
-        id: randomId,
-        name: name,
-        category: category,
-        image: image,
-        price: price,
-        description: description
+    else{
+        console.log(`MongoDB not connected`)
     }
+}
 
-    plants.push(newPlant)
-    
-    res.json({
-        success: true,
-        data:newPlant,
-        message: "New plant added successfully"
-    })
-})
-
-app.get("/plants", (req, res)=>{
-
-  res.json({
-   success: true,
-   data: plants,
-   message:"All plants fetched successfully"
-
-  })  
-})
-
-app.get("/plant/:id", (req, res)=>{
-
-    const {id} =  req.params
-
-    const plant = plants.find((p)=>p.id == id)
-
-    res.json({
-        success: plant ? true : false,
-        data:plant || null,
-        message: plant ? "Plant fetched successfully" : "Plant not found"
-    })
-})
+dbConnection();
 
 
-app.put("/plant/:id", (req, res)=>{
- 
-    const {
-        name,
-        category,
-        image,
-        price,
-        description,
-    } = req.body
+app.get("/health", getHealth)
 
-   const {id} = req.params
+app.post("/plant", postPlant)
 
-   let index = -1
+app.get("/plants", getPlants)
 
-   plants.forEach((plant, i)=>{
-    if(plant.id == id){
-        index = i
-    }
-   })
+app.get("/plant/:id", getPlantId)
 
+app.put("/plant/:id", putPlantId)
 
-   const newObj = {
-   id,
-   name,
-   category,
-   image,
-   price,
-   description
-   }
+app.delete("/plant/:id", deletePlantId )
 
-   if(index==-1){
+app.use("*", handlePageNotFound)
 
-    return  res.json({
-    success: false,
-    message:`Plant not found for id ${id}`,
-    data: null
-    })
-   }
-
-   else{
-    plants[index] = newObj
-
-    return  res.json({
-        success: true,
-        message:`Plant updated successfully`,
-        data: newObj
-        })
-   } 
-   
-})
-
-app.delete("/plant/:id", (req, res)=>{
-    console.log("Point 1")
-
-    const {id} = req.params
-
-    let index = -1
-
-    plants.forEach((plant, i)=>{
-      if(plant.id==id) {
-
-      index = i
-      }
-    })
-
-    if(index==-1){
-        return res.json({
-            success: false,
-            message: `Plant not found with id ${id}`
-        })
-    }
-
-    plants.splice(index, 1)
-
-
-    res.json({
-        success: true,
-        message: "Plant deleted successfully",
-        data: null
-    })
-})
-
-app.use("*", (req, res)=>{
-
-   res.send(`<div>
-   <h1 style="text-align: center;"> 404 Not Found</h1>
-    </div>`)
-})
-
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 8000
 
 app.listen(PORT, ()=>{
     console.log(`Server is running on ${PORT}`)
